@@ -1,0 +1,4 @@
+opencv-python==4.5.4.60
+pyzbar==0.1.8
+imutils==0.5.4
+requests==2.25.1
