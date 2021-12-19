@@ -8,6 +8,7 @@ import time
 import requests
 from datetime import datetime, date
 import os
+import platform
 import tkinter as tk
 from tkinter import Label, ttk
 from PIL import Image, ImageTk
@@ -18,6 +19,7 @@ def main():
     # system variables
     qrFound = False
     totalPeopleScanned = 0
+    platformSystem = platform.system()
     # start_time = 0
     
     
@@ -34,8 +36,8 @@ def main():
     app.title("RMIT QR code scanning system")
     
     # audio
-    approved = './approved.wav'
-    rejected = './rejected.wav'
+    approved = './assets/approved.wav'
+    rejected = './assets/rejected.wav'
     
     # ---- top frame ---
     topFrame = tk.LabelFrame(app, padx=20, pady=10)
@@ -136,7 +138,7 @@ def main():
     totalNumberScanFrame.pack(side=RIGHT)
     
     # credits
-    creditLbl = tk.Label(app, text="Copyright © RMIT University Vietnam. All rights reserved.", padx=20, pady=10, cursor='hand2')
+    creditLbl = tk.Label(app, text="Copyright © RMIT University Vietnam. All rights reserved.", padx=20, pady=10)
     def creditClickHandler(event):
         smallWindow = tk.Toplevel(app)
         smallWindow.geometry('500x100+200+200')
@@ -169,10 +171,15 @@ def main():
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
             barcodeData = barcode.data.decode("utf-8")
-            barcodeType = barcode.type
+            # print(barcodeData)
+            # barcodeType = barcode.type
             
             # get request, verify QR
             response = requests.get(f'{API_URL}/{barcodeData}')
+            if response.status_code != 200:
+                # scanStatusLabel.config(text="Invalid format. Please check your QR code")
+                print("Invalid format. Please re-check your QR code")
+                break
             data = response.json()
             valid = data['valid']
             name = data['name']
@@ -198,16 +205,16 @@ def main():
             # need to change this to boolean!
             if valid == 'Yes':
                 scanStatusLabel.config(bg="#5ccf23", fg="#fff", text="Approved ✅")
-                os.system("afplay " + approved)
+                if platformSystem == 'Darwin':
+                    os.system("afplay " + approved)
             else:
                 scanStatusLabel.config(bg="#cf0e1b", text="Rejected ❌")
-                os.system("afplay " + rejected)
+                if platformSystem == 'Darwin':
+                    os.system("afplay " + rejected)
                 
-            
             listbox.insert(0, f'{current_time}: {name}, {id}, {role}')
             qrFound = True
             # start_time = time.time()
-            
             
                 
         key = cv2.waitKey(1) & 0xFF
@@ -219,6 +226,7 @@ def main():
             time.sleep(1)
             qrFound = False
             
+        # TODO
         # reset the system to idle mode if time exceeds a certain amount
         # print(time.time() - start_time )
         # if time.time() - start_time > 3:
